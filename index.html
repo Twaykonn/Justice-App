@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildPEACE - ODS 16 - Arte Interactivo</title>
+<style>
+  :root{
+    --bg:#111;
+    --panel:#1b1b1b;
+    --panel2:#252525;
+    --text:#f5f5f5;
+    --muted:#bdbdbd;
+    --accent:#f4c400;
+    --border:#3a3a3a;
+    --danger:#d9534f;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    overflow:hidden;
+  }
+  button,select,input{
+    font:inherit;
+  }
+  button{
+    border:none;
+    border-radius:7px;
+    padding:8px 11px;
+    cursor:pointer;
+    background:#eee;
+    color:#111;
+    transition:.15s;
+  }
+  button:hover{transform:translateY(-1px)}
+  button:active{transform:translateY(0)}
+  button.active{outline:2px solid var(--accent); outline-offset:1px}
+  button.secondary{background:#333;color:#fff}
+  button.danger{background:var(--danger);color:#fff}
+  button.success{background:#7fc97f;color:#111}
+  input,select{
+    background:#f2f2f2;
+    color:#111;
+    border:1px solid #aaa;
+    border-radius:6px;
+    padding:7px;
+  }
+
+  #topbar{
+    position:fixed;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    width:min(1180px,calc(100vw - 20px));
+    background:rgba(0,0,0,.86);
+    border:1px solid #333;
+    border-radius:12px;
+    padding:9px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .brand{
+    font-weight:700;
+    margin-right:auto;
+    white-space:nowrap;
+  }
+  .mode-switch{
+    display:flex;
+    gap:6px;
+    background:#222;
+    padding:4px;
+    border-radius:8px;
+  }
+  .mode-switch button{
+    background:#2d2d2d;
+    color:#fff;
+  }
+  .mode-switch button.active{
+    background:#fff;
+    color:#111;
+  }
+
+  #layout{
+    position:fixed;
+    inset:0;
+    display:grid;
+    grid-template-columns:240px 1fr 250px;
+    gap:10px;
+    padding:78px 10px 56px;
+  }
+  .panel{
+    background:rgba(22,22,22,.94);
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:auto;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+  }
+  .panel h3{
+    margin:0;
+    padding:13px 14px 8px;
+    font-size:14px;
+  }
+  .panel .section{
+    padding:10px 12px;
+    border-top:1px solid #2d2d2d;
+  }
+  .row{
+    display:flex;
+    gap:7px;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  .row > *{flex:1}
+  .row .fixed{flex:0 0 auto}
+  .stack button,.stack select,.stack input{
+    width:100%;
+    margin-bottom:7px;
+  }
+  .small{
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.35;
+  }
+  .label{
+    font-size:12px;
+    color:#ddd;
+    margin-bottom:4px;
+    display:block;
+  }
+
+  #workspace{
+    position:relative;
+    background:#efefef;
+    border:1px solid #333;
+    border-radius:12px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-width:0;
+    min-height:0;
+  }
+  #lienzo{
+    display:block;
+    background:#fff;
+    box-shadow:0 12px 40px rgba(0,0,0,.35);
+    touch-action:none;
+    max-width:100%;
+    max-height:100%;
+  }
+  #emptyHint{
+    position:absolute;
+    pointer-events:none;
+    color:#333;
+    text-align:center;
+    font-size:14px;
+    max-width:360px;
+    line-height:1.5;
+  }
+  #statusBar{
+    position:fixed;
+    left:10px;
+    right:10px;
+    bottom:10px;
+    height:38px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.84);
+    border:1px solid #333;
+    border-radius:10px;
+    z-index:20;
+    padding:0 12px;
+    font-size:13px;
+  }
+
+  .palette{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:6px;
+  }
+  .color-btn{
+    height:30px;
+    border-radius:6px;
+    border:2px solid #777;
+  }
+  .color-btn.selected{outline:2px solid white;outline-offset:1px}
+  .swatch-black{background:#111}
+  .swatch-white{background:#fff}
+  .swatch-red{background:#d72626}
+  .swatch-blue{background:#2458d3}
+  .swatch-yellow{background:#f2d400}
+
+  #shapeList{
+    max-height:220px;
+    overflow:auto;
+  }
+  .shape-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:7px;
+    border-radius:6px;
+    background:#232323;
+    margin-bottom:6px;
+    font-size:12px;
+  }
+  .shape-item.selected{outline:2px solid var(--accent)}
+  .shape-item .mini{
+    width:18px;height:18px;border:1px solid #777;flex:0 0 auto;
+  }
+  .shape-item span:nth-child(2){flex:1}
+
+  #challengeBox{
+    background:#202020;
+    border:1px dashed #555;
+    border-radius:8px;
+    padding:9px;
+    font-size:12px;
+    line-height:1.4;
+  }
+
+  .proportion-control{margin-bottom:10px}
+  .proportion-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    margin-bottom:4px;
+  }
+  .proportion-head .value{
+    min-width:62px;
+    text-align:right;
+    color:#f4c400;
+    font-weight:700;
+    font-size:12px;
+  }
+  .proportion-control input[type="range"]{
+    width:100%;
+    padding:0;
+    accent-color:#f4c400;
+    background:transparent;
+  }
+  .lock-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:6px;
+    margin-top:7px;
+  }
+  .lock-item{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:12px;
+  }
+  .lock-item input{width:auto;padding:0}
+  .ratio-info{
+    margin-top:7px;
+    padding:7px;
+    border-radius:6px;
+    background:#202020;
+    color:#bdbdbd;
+    font-size:11px;
+    line-height:1.35;
+  }
+
+  .hidden{display:none!important}
+  .check{display:flex;gap:7px;align-items:center;font-size:12px;margin-bottom:7px}
+  .check input{width:auto}
+
+  @media (max-width: 900px){
+    #layout{grid-template-columns:190px 1fr; padding-bottom:56px}
+    #rightPanel{display:none}
+  }
+  @media (max-width: 650px){
+    #layout{grid-template-columns:1fr; padding-top:128px}
+    #leftPanel{display:none}
+    #workspace{min-height:0}
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="brand">BuildPEACE · ODS 16 · Arte Interactivo</div>
+
+  <div class="mode-switch">
+    <button id="freeModeBtn" class="active" onclick="setMode('free')">🎨 Lienzo libre</button>
+    <button id="neoModeBtn" onclick="setMode('neo')">▦ Composición neoplasticista</button>
+  </div>
+
+  <button class="secondary" onclick="cambiarNarrativa('paz')">Paz</button>
+  <button class="secondary" onclick="cambiarNarrativa('justicia')">Justicia</button>
+  <button class="secondary" onclick="cambiarNarrativa('instituciones')">Instituciones</button>
+</div>
+
+<div id="layout">
+
+  <aside id="leftPanel" class="panel">
+    <div id="freeControls">
+      <h3>🎨 Lienzo libre</h3>
+      <div class="section stack">
+        <label class="label">Color</label>
+        <input type="color" id="colorPicker" value="#111111">
+
+        <label class="label">Tamaño del pincel</label>
+        <select id="brushSize">
+          <option value="3">Muy fino</option>
+          <option value="5" selected>Delgado</option>
+          <option value="10">Medio</option>
+          <option value="20">Grueso</option>
+          <option value="35">Muy grueso</option>
+        </select>
+
+        <label class="label">Pincel</label>
+        <select id="brushType">
+          <option value="round">Redondo</option>
+          <option value="square">Cuadrado</option>
+        </select>
+
+        <div class="row">
+          <button onclick="clearCanvas()">Limpiar</button>
+          <button onclick="undoFree()">Deshacer</button>
+        </div>
+        <button onclick="redoFree()">Rehacer</button>
+      </div>
+
+      <div class="section">
+        <h3 style="padding:0 0 8px">💡 Idea</h3>
+        <div class="small">
+          Usa el color, tamaño y tipo de pincel para crear una intervención libre relacionada con Paz, Justicia o Instituciones.
+        </div>
+      </div>
+    </div>
+
+    <div id="neoControls" class="hidden">
+      <h3>▦ Constructor neoplasticista</h3>
+
+      <div class="section stack">
+        <button onclick="addRectangle()">＋ Rectángulo</button>
+        <button onclick="addLine('h')">＋ Línea horizontal</button>
+        <button onclick="addLine('v')">＋ Línea vertical</button>
+        <button onclick="divideSelected('v')">⇢ Dividir vertical</button>
+        <button onclick="divideSelected('h')">⇳ Dividir horizontal</button>
+        <button onclick="generateComposition()">✦ Generar composición</button>
+      </div>
+
+      <div class="section">
+        <label class="label">Paleta limitada</label>
+        <div class="palette">
+          <button class="color-btn swatch-black selected" onclick="setNeoColor('#111111',this)" title="Negro"></button>
+          <button class="color-btn swatch-white" onclick="setNeoColor('#ffffff',this)" title="Blanco"></button>
+          <button class="color-btn swatch-red" onclick="setNeoColor('#d72626',this)" title="Rojo"></button>
+          <button class="color-btn swatch-blue" onclick="setNeoColor('#2458d3',this)" title="Azul"></button>
+          <button class="color-btn swatch-yellow" onclick="setNeoColor('#f2d400',this)" title="Amarillo"></button>
+        </div>
+      </div>
+
+      <div class="section stack">
+        <button onclick="duplicateSelected()">⧉ Duplicar</button>
+        <button onclick="deleteSelected()" class="danger">✕ Eliminar</button>
+        <div class="row">
+          <button onclick="bringForward()">▲ Frente</button>
+          <button onclick="sendBackward()">▼ Fondo</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 style="padding:0 0 8px">Alinear</h3>
+        <div class="row">
+          <button onclick="alignSelected('left')">←</button>
+          <button onclick="alignSelected('center')">↔</button>
+          <button onclick="alignSelected('right')">→</button>
+        </div>
+        <div class="row">
+          <button onclick="alignSelected('top')">↑</button>
+          <button onclick="alignSelected('middle')">↕</button>
+          <button onclick="alignSelected('bottom')">↓</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 style="padding:0 0 8px">Tamaño y posición</h3>
+        <div class="row"><button onclick="nudgeSelected(-5,0)">←</button><button onclick="nudgeSelected(5,0)">→</button></div>
+        <div class="row"><button onclick="nudgeSelected(0,-5)">↑</button><button onclick="nudgeSelected(0,5)">↓</button></div>
+        <div class="row"><button onclick="resizeSelected(1.1,1.1)">＋ tamaño</button><button onclick="resizeSelected(.9,.9)">－ tamaño</button></div>
+        <button onclick="rotateSelected(90)">↻ Rotar 90°</button>
+      </div>
+
+      <div class="section">
+        <h3 style="padding:0 0 8px">Reglas de composición</h3>
+        <label class="check"><input id="ruleHV" type="checkbox" checked> Solo vertical/horizontal</label>
+        <label class="check"><input id="rulePalette" type="checkbox" checked> Paleta limitada</label>
+        <label class="check"><input id="ruleRect" type="checkbox" checked> Formas rectangulares</label>
+        <label class="check"><input id="ruleBalance" type="checkbox"> Buscar equilibrio</label>
+        <button onclick="applyRules()">✓ Revisar reglas</button>
+      </div>
+
+      <div class="section">
+        <h3 style="padding:0 0 8px">🎯 Reto</h3>
+        <div id="challengeBox">Pulsa “Nuevo reto” para recibir una consigna.</div>
+        <br>
+        <button onclick="newChallenge()">Nuevo reto</button>
+      </div>
+
+      <div class="section">
+        <h3 style="padding:0 0 8px">Elementos</h3>
+        <div id="shapeList"></div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="workspace">
+    <canvas id="lienzo"></canvas>
+    <div id="emptyHint">Selecciona una opción para comenzar.</div>
+  </main>
+
+  <aside id="rightPanel" class="panel">
+    <h3>⚙ Herramientas</h3>
+    <div class="section stack">
+      <button onclick="undo()">↶ Deshacer</button>
+      <button onclick="redo()">↷ Rehacer</button>
+      <button onclick="clearAll()">🗑 Limpiar todo</button>
+      <button class="success" onclick="downloadCanvas()">⬇ Guardar PNG</button>
+      <button class="secondary" onclick="saveProject()">💾 Guardar proyecto</button>
+      <label class="label" style="margin-top:6px">Cargar proyecto</label>
+      <input type="file" id="projectFile" accept=".json" onchange="loadProject(event)">
+    </div>
+
+    <div class="section">
+      <h3 style="padding:0 0 8px">📐 Distribuir</h3>
+      <div class="row">
+        <button onclick="distributeSelected('h')">Horiz.</button>
+        <button onclick="distributeSelected('v')">Vert.</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 style="padding:0 0 8px">📊 Propiedades seleccionadas</h3>
+      <div id="properties" class="small">Selecciona un elemento en el modo neoplasticista.</div>
+    </div>
+
+    <div class="section" id="proportionPanel">
+      <h3 style="padding:0 0 8px">📐 Proporciones</h3>
+
+      <div class="proportion-control">
+        <div class="proportion-head">
+          <span class="label" style="margin:0">Ancho</span>
+          <span id="widthValue" class="value">—</span>
+        </div>
+        <input id="widthSlider" type="range" min="6" max="1000" step="1" value="100"
+               oninput="previewDimension('width', this.value)"
+               onchange="commitDimensionChange()">
+      </div>
+
+      <div class="proportion-control">
+        <div class="proportion-head">
+          <span class="label" style="margin:0">Alto</span>
+          <span id="heightValue" class="value">—</span>
+        </div>
+        <input id="heightSlider" type="range" min="6" max="700" step="1" value="100"
+               oninput="previewDimension('height', this.value)"
+               onchange="commitDimensionChange()">
+      </div>
+
+      <div class="lock-grid">
+        <label class="lock-item"><input id="lockWidth" type="checkbox" onchange="handleDimensionLocks()"> Bloquear ancho</label>
+        <label class="lock-item"><input id="lockHeight" type="checkbox" onchange="handleDimensionLocks()"> Bloquear alto</label>
+        <label class="lock-item"><input id="lockAspect" type="checkbox" onchange="toggleAspectLock()"> Mantener relación de aspecto</label>
+      </div>
+
+      <div id="ratioInfo" class="ratio-info">Selecciona un elemento para editar sus proporciones.</div>
+    </div>
+
+    <div class="section">
+      <h3 style="padding:0 0 8px">ODS 16</h3>
+      <div id="mensaje" class="small">Selecciona un valor para comenzar.</div>
+    </div>
+  </aside>
+</div>
+
+<div id="statusBar">Modo: Lienzo libre · ODS 16: Paz, justicia e instituciones sólidas.</div>
+
+<script>
+const canvas = document.getElementById("lienzo");
+const ctx = canvas.getContext("2d");
+const workspace = document.getElementById("workspace");
+
+let mode = "free";
+let narrativa = "";
+let dibujando = false;
+let freeHistory = [];
+let freeHistoryIndex = -1;
+
+let neoColor = "#111111";
+let objects = [];
+let selectedId = null;
+let neoHistory = [];
+let neoHistoryIndex = -1;
+let dragState = null;
+let dimensionEditState = {
+  editing:false,
+  originalRatio:null
+};
+
+const challenges = [
+  "Crea una obra usando 3 rectángulos, 2 líneas negras y solo rojo y amarillo.",
+  "Construye una composición con equilibrio asimétrico y al menos una gran zona blanca.",
+  "Usa solo formas rectangulares y coloca una línea vertical como eje visual.",
+  "Crea una composición con rojo, azul y amarillo, dejando espacios blancos visibles.",
+  "Diseña una obra que transmita orden mediante líneas verticales y horizontales.",
+  "Crea una composición con cinco elementos y diferentes tamaños."
+];
+
+function fitCanvas(){
+  const rect = workspace.getBoundingClientRect();
+  const w = Math.max(300, rect.width - 4);
+  const h = Math.max(300, rect.height - 4);
+  const targetW = 1000, targetH = 700;
+  const scale = Math.min(w / targetW, h / targetH);
+  canvas.width = Math.floor(targetW * scale);
+  canvas.height = Math.floor(targetH * scale);
+  canvas.style.width = canvas.width + "px";
+  canvas.style.height = canvas.height + "px";
+  redraw();
+}
+window.addEventListener("resize", fitCanvas);
+fitCanvas();
+
+function setMode(next){
+  mode = next;
+  document.getElementById("freeControls").classList.toggle("hidden", next !== "free");
+  document.getElementById("neoControls").classList.toggle("hidden", next !== "neo");
+  document.getElementById("freeModeBtn").classList.toggle("active", next === "free");
+  document.getElementById("neoModeBtn").classList.toggle("active", next === "neo");
+  document.getElementById("emptyHint").classList.toggle("hidden", next === "neo" || freeHistoryIndex >= 0);
+  updateStatus();
+  redraw();
+}
+
+function updateStatus(text){
+  document.getElementById("statusBar").textContent =
+    text || ("Modo: " + (mode === "free" ? "Lienzo libre" : "Composición neoplasticista") +
+    " · " + (narrativa ? narrativa + " · " : "") +
+    "ODS 16: Paz, justicia e instituciones sólidas.");
+}
+
+function cambiarNarrativa(valor) {
+  const mensaje = document.getElementById("mensaje");
+  if (valor === "paz") {
+    narrativa = "Paz";
+    mensaje.textContent = "Palabras clave: armonía, diálogo, empatía, cooperación.";
+  } else if (valor === "justicia") {
+    narrativa = "Justicia";
+    mensaje.textContent = "Palabras clave: equidad, verdad, igualdad, dignidad.";
+  } else if (valor === "instituciones") {
+    narrativa = "Instituciones sólidas";
+    mensaje.textContent = "Palabras clave: confianza, democracia, transparencia, solidez.";
+  }
+  updateStatus();
+}
+
+// -------------------- LIENZO LIBRE --------------------
+function saveFreeState(){
+  const data = ctx.getImageData(0,0,canvas.width,canvas.height);
+  freeHistory = freeHistory.slice(0, freeHistoryIndex + 1);
+  freeHistory.push(data);
+  freeHistoryIndex++;
+  document.getElementById("emptyHint").classList.add("hidden");
+}
+function restoreFreeState(index){
+  if(index < 0){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    document.getElementById("emptyHint").classList.remove("hidden");
+    return;
+  }
+  ctx.putImageData(freeHistory[index],0,0);
+  document.getElementById("emptyHint").classList.add("hidden");
+}
+function undoFree(){
+  if(freeHistoryIndex >= 0){
+    freeHistoryIndex--;
+    restoreFreeState(freeHistoryIndex);
+  }
+}
+function redoFree(){
+  if(freeHistoryIndex < freeHistory.length-1){
+    freeHistoryIndex++;
+    restoreFreeState(freeHistoryIndex);
+  }
+}
+function startDrawing(e){
+  if(mode !== "free") return;
+  dibujando = true;
+  const p = getCanvasPoint(e);
+  ctx.beginPath();
+  ctx.moveTo(p.x,p.y);
+}
+function stopDrawing(){
+  if(!dibujando) return;
+  dibujando = false;
+  ctx.closePath();
+  saveFreeState();
+}
+function drawFree(e){
+  if(!dibujando || mode !== "free") return;
+  const p = getCanvasPoint(e);
+  ctx.lineWidth = Number(document.getElementById("brushSize").value);
+  ctx.lineCap = document.getElementById("brushType").value;
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = document.getElementById("colorPicker").value;
+  ctx.lineTo(p.x,p.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(p.x,p.y);
+}
+function getCanvasPoint(e){
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX-r.left) * (canvas.width/r.width),
+    y: (e.clientY-r.top) * (canvas.height/r.height)
+  };
+}
+canvas.addEventListener("pointerdown", startDrawing);
+canvas.addEventListener("pointermove", drawFree);
+canvas.addEventListener("pointerup", stopDrawing);
+canvas.addEventListener("pointercancel", stopDrawing);
+canvas.addEventListener("pointerleave", stopDrawing);
+
+function clearCanvas(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  saveFreeState();
+}
+function clearAll(){
+  if(mode === "free"){
+    clearCanvas();
+  } else {
+    objects = [];
+    selectedId = null;
+    pushNeoHistory();
+    redraw();
+    updateProperties();
+    renderShapeList();
+  }
+}
+
+function freeUndoRedoReset(){
+  freeHistory = [];
+  freeHistoryIndex = -1;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+freeUndoRedoReset();
+
+// -------------------- NEOPLASTICISMO --------------------
+function uid(){ return Math.random().toString(36).slice(2,10); }
+
+function addObject(obj){
+  objects.push({...obj, id:uid()});
+  selectedId = objects[objects.length-1].id;
+  pushNeoHistory();
+  redraw();
+  renderShapeList();
+  updateProperties();
+}
+
+function addRectangle(){
+  const w = 170, h = 120;
+  addObject({
+    type:"rect", x:canvas.width/2-w/2, y:canvas.height/2-h/2,
+    w,h,color:neoColor,rotation:0
+  });
+}
+
+function addLine(orientation){
+  const x = canvas.width/2;
+  const y = canvas.height/2;
+  addObject(orientation === "h" ? {
+    type:"line", orientation:"h", x:x-150,y,w:300,h:14,color:"#111111",rotation:0
+  } : {
+    type:"line", orientation:"v", x:x-7,y:y-150,w:14,h:300,color:"#111111",rotation:0
+  });
+}
+
+function cloneObject(o, dx=20, dy=20){
+  return {...o,id:uid(),x:o.x+dx,y:o.y+dy};
+}
+
+function duplicateSelected(){
+  const o = selectedObject();
+  if(!o) return;
+  const n = cloneObject(o);
+  objects.push(n);
+  selectedId = n.id;
+  pushNeoHistory();
+  redraw(); renderShapeList(); updateProperties();
+}
+
+function deleteSelected(){
+  if(!selectedId) return;
+  objects = objects.filter(o => o.id !== selectedId);
+  selectedId = null;
+  pushNeoHistory(); redraw(); renderShapeList(); updateProperties();
+}
+
+function selectedObject(){
+  return objects.find(o=>o.id===selectedId);
+}
+
+function setNeoColor(color,btn){
+  neoColor = color;
+  document.querySelectorAll(".color-btn").forEach(b=>b.classList.remove("selected"));
+  btn.classList.add("selected");
+  const o = selectedObject();
+  if(o){
+    o.color = color;
+    pushNeoHistory();
+    redraw();
+    updateProperties();
+    renderShapeList();
+  }
+}
+
+function syncProportionControls(){
+  const o = selectedObject();
+  const ws = document.getElementById("widthSlider");
+  const hs = document.getElementById("heightSlider");
+  const wv = document.getElementById("widthValue");
+  const hv = document.getElementById("heightValue");
+  const ri = document.getElementById("ratioInfo");
+
+  if(!o){
+    wv.textContent = "—";
+    hv.textContent = "—";
+    ri.textContent = "Selecciona un elemento para editar sus proporciones.";
+    return;
+  }
+
+  ws.value = Math.round(o.w);
+  hs.value = Math.round(o.h);
+  wv.textContent = Math.round(o.w) + " px";
+  hv.textContent = Math.round(o.h) + " px";
+
+  const ratio = o.h > 0 ? o.w / o.h : 1;
+  ri.textContent =
+    "Relación actual: " + ratio.toFixed(3) +
+    " · " + (o.type === "line"
+      ? "En líneas puedes ajustar longitud y grosor."
+      : "Ancho y alto pueden modificarse por separado.");
+
+  handleDimensionLocks(false);
+}
+
+function handleDimensionLocks(){
+  const lockW = document.getElementById("lockWidth").checked;
+  const lockH = document.getElementById("lockHeight").checked;
+  const ws = document.getElementById("widthSlider");
+  const hs = document.getElementById("heightSlider");
+
+  ws.disabled = lockW;
+  hs.disabled = lockH;
+
+  if(lockW && lockH){
+    document.getElementById("ratioInfo").textContent =
+      "Ancho y alto están bloqueados. Desbloquea al menos una dimensión para editar.";
+  }
+}
+
+function toggleAspectLock(){
+  const o = selectedObject();
+  dimensionEditState.originalRatio = o && o.h > 0 ? o.w / o.h : null;
+  handleDimensionLocks();
+  syncProportionControls();
+}
+
+function previewDimension(axis, rawValue){
+  const o = selectedObject();
+  if(!o) return;
+
+  if(!dimensionEditState.editing){
+    dimensionEditState.editing = true;
+    dimensionEditState.originalRatio = o.h > 0 ? o.w / o.h : 1;
+  }
+
+  const value = Math.max(6, Number(rawValue) || 6);
+  const lockW = document.getElementById("lockWidth").checked;
+  const lockH = document.getElementById("lockHeight").checked;
+  const lockAspect = document.getElementById("lockAspect").checked;
+  const ratio = dimensionEditState.originalRatio || 1;
+
+  if(axis === "width"){
+    if(lockW) return;
+    o.w = Math.min(1000, value);
+
+    if(lockAspect && !lockH){
+      o.h = Math.max(6, Math.min(700, o.w / ratio));
+    }
+  }else{
+    if(lockH) return;
+    o.h = Math.min(700, value);
+
+    if(lockAspect && !lockW){
+      o.w = Math.max(6, Math.min(1000, o.h * ratio));
+    }
+  }
+
+  redraw();
+  renderShapeList();
+  updateProperties(false);
+  updateProportionLabels();
+}
+
+function updateProportionLabels(){
+  const o = selectedObject();
+  if(!o) return;
+
+  document.getElementById("widthSlider").value = Math.round(o.w);
+  document.getElementById("heightSlider").value = Math.round(o.h);
+  document.getElementById("widthValue").textContent = Math.round(o.w) + " px";
+  document.getElementById("heightValue").textContent = Math.round(o.h) + " px";
+
+  const ratio = o.h > 0 ? o.w / o.h : 1;
+  document.getElementById("ratioInfo").textContent =
+    "Relación actual: " + ratio.toFixed(3) +
+    " · " + (o.type === "line" ? "línea: longitud y grosor editables." : "rectángulo: ancho y alto editables.");
+}
+
+function commitDimensionChange(){
+  const o = selectedObject();
+  if(!o || !dimensionEditState.editing) return;
+
+  pushNeoHistory();
+  dimensionEditState.editing = false;
+  dimensionEditState.originalRatio = null;
+
+  redraw();
+  renderShapeList();
+  updateProperties();
+}
+
+function nudgeSelected(dx,dy){
+  const o = selectedObject(); if(!o) return;
+  o.x += dx; o.y += dy;
+  pushNeoHistory(); redraw(); updateProperties();
+}
+function resizeSelected(sx,sy){
+  const o = selectedObject(); if(!o) return;
+
+  const lockW = document.getElementById("lockWidth").checked;
+  const lockH = document.getElementById("lockHeight").checked;
+  const lockAspect = document.getElementById("lockAspect").checked;
+
+  let w = lockW ? o.w : Math.max(6, o.w*sx);
+  let h = lockH ? o.h : Math.max(6, o.h*sy);
+
+  if(lockAspect){
+    const ratio = o.h > 0 ? o.w / o.h : 1;
+
+    if(!lockW && lockH) w = Math.max(6, h*ratio);
+    else if(lockW && !lockH) h = Math.max(6, w/ratio);
+    else if(!lockW && !lockH){
+      const factor = Math.abs(sx-1) >= Math.abs(sy-1) ? sx : sy;
+      w = Math.max(6, o.w*factor);
+      h = Math.max(6, o.h*factor);
+    }
+  }
+
+  o.w = Math.min(1000,w);
+  o.h = Math.min(700,h);
+
+  pushNeoHistory();
+  redraw();
+  updateProperties();
+}
+function rotateSelected(deg){
+  const o = selectedObject(); if(!o) return;
+  o.rotation = (o.rotation + deg) % 360;
+  pushNeoHistory(); redraw(); updateProperties();
+}
+function bringForward(){
+  const i = objects.findIndex(o=>o.id===selectedId); if(i<0 || i===objects.length-1)return;
+  [objects[i],objects[i+1]]=[objects[i+1],objects[i]];
+  pushNeoHistory(); redraw(); renderShapeList();
+}
+function sendBackward(){
+  const i = objects.findIndex(o=>o.id===selectedId); if(i<=0)return;
+  [objects[i],objects[i-1]]=[objects[i-1],objects[i]];
+  pushNeoHistory(); redraw(); renderShapeList();
+}
+
+function alignSelected(kind){
+  const o = selectedObject(); if(!o)return;
+  if(kind==="left") o.x=20;
+  if(kind==="right") o.x=canvas.width-o.w-20;
+  if(kind==="center") o.x=(canvas.width-o.w)/2;
+  if(kind==="top") o.y=20;
+  if(kind==="bottom") o.y=canvas.height-o.h-20;
+  if(kind==="middle") o.y=(canvas.height-o.h)/2;
+  pushNeoHistory(); redraw(); updateProperties();
+}
+
+function distributeSelected(axis){
+  if(objects.length < 3){
+    updateStatus("Necesitas al menos 3 elementos para distribuir.");
+    return;
+  }
+  const sorted = [...objects].sort((a,b)=>
+    axis==="h" ? (a.x-b.x) : (a.y-b.y)
+  );
+  const first = sorted[0], last = sorted[sorted.length-1];
+  if(axis==="h"){
+    const span = (last.x-first.x) / (sorted.length-1);
+    sorted.forEach((o,i)=>o.x=first.x+span*i);
+  } else {
+    const span = (last.y-first.y) / (sorted.length-1);
+    sorted.forEach((o,i)=>o.y=first.y+span*i);
+  }
+  pushNeoHistory(); redraw(); updateProperties();
+}
+
+function divideSelected(axis){
+  const o = selectedObject(); if(!o) return;
+  const original = {...o};
+  const gap = 5;
+  if(axis==="v"){
+    const w = (o.w-gap)/2;
+    o.w = w;
+    const second = {...original,id:uid(),x:o.x+w+gap,w:w};
+    objects.push(second);
+  } else {
+    const h = (o.h-gap)/2;
+    o.h = h;
+    const second = {...original,id:uid(),y:o.y+h+gap,h:h};
+    objects.push(second);
+  }
+  selectedId = objects[objects.length-1].id;
+  pushNeoHistory(); redraw(); renderShapeList(); updateProperties();
+}
+
+function generateComposition(){
+  objects = [];
+  const cols = 4, rows = 3;
+  const gap = Math.max(6,Math.round(canvas.width*0.01));
+  const cellW = (canvas.width - gap*(cols+1))/cols;
+  const cellH = (canvas.height - gap*(rows+1))/rows;
+  const palette = ["#ffffff","#ffffff","#111111","#d72626","#2458d3","#f2d400"];
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      if(Math.random() < 0.34) continue;
+      const w = cellW*(Math.random()>.55 ? 1 : .55) + Math.random()*12;
+      const h = cellH*(Math.random()>.55 ? 1 : .55) + Math.random()*10;
+      const x = gap + c*(cellW+gap);
+      const y = gap + r*(cellH+gap);
+      objects.push({
+        id:uid(),type:"rect",
+        x,y,w:Math.min(w,canvas.width-x-gap),h:Math.min(h,canvas.height-y-gap),
+        color:palette[Math.floor(Math.random()*palette.length)],
+        rotation:0
+      });
+    }
+  }
+  if(Math.random()>.35){
+    objects.push({id:uid(),type:"line",orientation:"v",x:canvas.width*.18,y:0,w:14,h:canvas.height,color:"#111111",rotation:0});
+  } else {
+    objects.push({id:uid(),type:"line",orientation:"h",x:0,y:canvas.height*.64,w:canvas.width,h:14,color:"#111111",rotation:0});
+  }
+  selectedId = objects.at(-1)?.id || null;
+  pushNeoHistory(); redraw(); renderShapeList(); updateProperties();
+  updateStatus("Composición generada. Puedes modificar cada elemento.");
+}
+
+function newChallenge(){
+  const text = challenges[Math.floor(Math.random()*challenges.length)];
+  document.getElementById("challengeBox").textContent = text;
+}
+function applyRules(){
+  const messages=[];
+  if(document.getElementById("ruleHV").checked) messages.push("✓ Orientación vertical/horizontal");
+  if(document.getElementById("rulePalette").checked) messages.push("✓ Paleta limitada");
+  if(document.getElementById("ruleRect").checked) messages.push("✓ Formas rectangulares");
+  if(document.getElementById("ruleBalance").checked) messages.push("✓ Revisar equilibrio visual");
+  updateStatus(messages.join(" · ") || "Sin reglas activas.");
+}
+
+// Hit testing y arrastre
+function pointInObject(p,o){
+  if(o.type==="rect") return p.x>=o.x && p.x<=o.x+o.w && p.y>=o.y && p.y<=o.y+o.h;
+  return p.x>=o.x && p.x<=o.x+o.w && p.y>=o.y && p.y<=o.y+o.h;
+}
+canvas.addEventListener("pointerdown", e=>{
+  if(mode!=="neo") return;
+  const p=getCanvasPoint(e);
+  for(let i=objects.length-1;i>=0;i--){
+    if(pointInObject(p,objects[i])){
+      selectedId=objects[i].id;
+      dimensionEditState.editing=false;
+      dragState={startX:p.x,startY:p.y,origX:objects[i].x,origY:objects[i].y};
+      renderShapeList(); updateProperties(); redraw();
+      return;
+    }
+  }
+  selectedId=null;
+  renderShapeList(); updateProperties(); redraw();
+});
+canvas.addEventListener("pointermove", e=>{
+  if(mode!=="neo" || !dragState) return;
+  const o=selectedObject(); if(!o)return;
+  const p=getCanvasPoint(e);
+  let dx=p.x-dragState.startX, dy=p.y-dragState.startY;
+  if(document.getElementById("ruleHV").checked){
+    if(Math.abs(dx) >= Math.abs(dy)) dy=0; else dx=0;
+  }
+  o.x=dragState.origX+dx;
+  o.y=dragState.origY+dy;
+  redraw(); updateProperties();
+});
+canvas.addEventListener("pointerup", ()=>{
+  if(mode!=="neo" || !dragState) return;
+  dragState=null;
+  pushNeoHistory(); renderShapeList();
+});
+canvas.addEventListener("pointercancel", ()=>dragState=null);
+
+function drawObject(o,selected=false){
+  ctx.save();
+  ctx.translate(o.x+o.w/2,o.y+o.h/2);
+  ctx.rotate((o.rotation||0)*Math.PI/180);
+  ctx.translate(-o.w/2,-o.h/2);
+  ctx.fillStyle=o.color;
+  ctx.strokeStyle="#111";
+  if(o.type==="rect"){
+    ctx.fillRect(0,0,o.w,o.h);
+    if(selected){
+      ctx.strokeStyle="#ffcc00";
+      ctx.lineWidth=3;
+      ctx.strokeRect(0,0,o.w,o.h);
+    }
+  } else if(o.type==="line"){
+    ctx.fillRect(0,0,o.w,o.h);
+    if(selected){
+      ctx.strokeStyle="#ffcc00";
+      ctx.lineWidth=3;
+      ctx.strokeRect(0,0,o.w,o.h);
+    }
+  }
+  ctx.restore();
+}
+
+function redraw(){
+  if(mode==="free"){
+    // El lienzo libre conserva su bitmap actual.
+    return;
+  }
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#ffffff";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  objects.forEach(o=>drawObject(o,o.id===selectedId));
+}
+
+function pushNeoHistory(){
+  const snapshot=JSON.parse(JSON.stringify(objects));
+  neoHistory=neoHistory.slice(0,neoHistoryIndex+1);
+  neoHistory.push(snapshot);
+  neoHistoryIndex++;
+}
+function restoreNeo(index){
+  objects=JSON.parse(JSON.stringify(neoHistory[index]||[]));
+  selectedId=null;
+  redraw(); renderShapeList(); updateProperties();
+}
+function undo(){
+  if(mode==="free"){undoFree();return;}
+  if(neoHistoryIndex>0){neoHistoryIndex--;restoreNeo(neoHistoryIndex)}
+}
+function redo(){
+  if(mode==="free"){redoFree();return;}
+  if(neoHistoryIndex<neoHistory.length-1){neoHistoryIndex++;restoreNeo(neoHistoryIndex)}
+}
+
+function renderShapeList(){
+  const box=document.getElementById("shapeList");
+  box.innerHTML="";
+  [...objects].reverse().forEach((o,revIndex)=>{
+    const el=document.createElement("div");
+    el.className="shape-item"+(o.id===selectedId?" selected":"");
+    const mini=document.createElement("span");
+    mini.className="mini";
+    mini.style.background=o.color;
+    const label=document.createElement("span");
+    label.textContent=(o.type==="rect"?"Rectángulo":"Línea")+" · "+Math.round(o.w)+"×"+Math.round(o.h);
+    el.appendChild(mini);el.appendChild(label);
+    el.onclick=()=>{selectedId=o.id;renderShapeList();updateProperties();redraw();};
+    box.appendChild(el);
+  });
+}
+function updateProperties(syncControls=true){
+  const box=document.getElementById("properties");
+  const o=selectedObject();
+
+  if(!o){
+    box.textContent="Selecciona un elemento en el modo neoplasticista.";
+    if(syncControls) syncProportionControls();
+    return;
+  }
+
+  box.innerHTML =
+    "Tipo: <b>"+(o.type==="rect"?"Rectángulo":"Línea")+"</b><br>"+
+    "Color: "+o.color+"<br>"+
+    "X: "+Math.round(o.x)+" · Y: "+Math.round(o.y)+"<br>"+
+    "Ancho: "+Math.round(o.w)+" · Alto: "+Math.round(o.h)+"<br>"+
+    "Rotación: "+(o.rotation||0)+"°";
+
+  if(syncControls) syncProportionControls();
+}
+
+// Guardar/cargar proyectos
+function projectData(){
+  if(mode==="free"){
+    return {mode:"free",narrativa,freeImage:canvas.toDataURL(),canvasW:canvas.width,canvasH:canvas.height};
+  }
+  return {mode:"neo",narrativa,objects};
+}
+function saveProject(){
+  const data=JSON.stringify(projectData(),null,2);
+  const blob=new Blob([data],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="ODS16_proyecto.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  updateStatus("Proyecto guardado.");
+}
+function loadProject(ev){
+  const file=ev.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(data.mode==="neo"){
+        setMode("neo");
+        objects=data.objects||[];
+        selectedId=null;
+        pushNeoHistory(); redraw(); renderShapeList(); updateProperties();
+      } else {
+        setMode("free");
+        const img=new Image();
+        img.onload=()=>{
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          saveFreeState();
+        };
+        img.src=data.freeImage;
+      }
+      if(data.narrativa)narrativa=data.narrativa;
+      updateStatus("Proyecto cargado.");
+    }catch(err){
+      updateStatus("No se pudo cargar el proyecto.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function downloadCanvas(){
+  if(mode==="neo") redraw();
+  const enlace=document.createElement("a");
+  enlace.download="ODS16_creacion_"+(mode==="free"?"libre":"neoplasticista")+".png";
+  enlace.href=canvas.toDataURL("image/png");
+  enlace.click();
+  document.getElementById("mensaje").textContent="Creación exportada como PNG. ODS 16: Paz, justicia e instituciones sólidas.";
+}
+
+function initialise(){
+  // Estado inicial vacío y una composición de ejemplo solo al entrar manualmente.
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  pushNeoHistory();
+  syncProportionControls();
+  updateStatus();
+}
+initialise();
+</script>
+</body>
+</html>
